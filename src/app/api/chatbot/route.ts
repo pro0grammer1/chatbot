@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-        const response = await fetch('https://r-chatbot.vercel.app/chatbot', {
+        const response = await fetch('https://gfg-chatbot-pied.vercel.app/chatbot', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
