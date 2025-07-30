@@ -4,7 +4,7 @@ import { connectDB } from '@/db/connect';
 import { AppInfo } from '@/db/appInfo';
 import { User } from '@/db/userInfo';
 
-export async function GET(req: Request) {
+export async function GET() {
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -25,7 +25,7 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     id: appInfo._id.toString(),
-    qna: appInfo.qna.sort((a:any, b:any) => new Date(a.timeStamp).getTime() - new Date(b.timeStamp).getTime()),
+    qna: appInfo.qna.sort((a: { timeStamp: string | number | Date; }, b: { timeStamp: string | number | Date; }) => new Date(a.timeStamp).getTime() - new Date(b.timeStamp).getTime()),
   });
 }
 
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE() {
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

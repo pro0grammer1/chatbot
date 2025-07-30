@@ -1,8 +1,32 @@
 import { NextResponse } from 'next/server';
 
+interface ChatbotRequest {
+  message: string;
+}
+
+interface ChatbotResponse {
+  reply?: string;
+  response?: string;
+  error?: string;
+  [key: string]: unknown;
+}
+
+interface FetchError extends Error {
+  code?: string;
+  cause?: unknown;
+}
+
+function isFetchError(error: unknown): error is FetchError {
+  return error instanceof Error && 'code' in error;
+}
+
+function isAbortError(error: unknown): error is Error & { name: 'AbortError' } {
+  return error instanceof Error && error.name === 'AbortError';
+}
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body: ChatbotRequest = await req.json();
 
     if (!body.message || typeof body.message !== 'string') {
       return NextResponse.json(
@@ -64,11 +88,12 @@ export async function POST(req: Request) {
           );
         }
 
-        const responseData = await response.json();
+        const responseData: ChatbotResponse = await response.json();
         return NextResponse.json(responseData);
 
-      } catch (fetchError: any) {
-        console.error(`Attempt ${attempt} failed:`, fetchError.message);
+      } catch (fetchError: unknown) {
+        const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown error';
+        console.error(`Attempt ${attempt} failed:`, errorMessage);
         
         if (attempt === maxRetries) {
           throw fetchError;
@@ -78,24 +103,24 @@ export async function POST(req: Request) {
       }
     }
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Chatbot API error:', err);
 
-    if (err.name === 'AbortError' || err.code === 'UND_ERR_CONNECT_TIMEOUT') {
+    if (isAbortError(err) || (isFetchError(err) && err.code === 'UND_ERR_CONNECT_TIMEOUT')) {
       return NextResponse.json(
         { error: 'Chatbot service is taking too long to respond. Please try again.' },
         { status: 504 }
       );
     }
 
-    if (err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED') {
+    if (isFetchError(err) && (err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED')) {
       return NextResponse.json(
         { error: 'Chatbot service is currently unavailable. Please try again later.' },
         { status: 503 }
       );
     }
 
-    if (err.code === 'ENOTFOUND') {
+    if (isFetchError(err) && err.code === 'ENOTFOUND') {
       return NextResponse.json(
         { error: 'Chatbot service not found. Please contact support.' },
         { status: 503 }

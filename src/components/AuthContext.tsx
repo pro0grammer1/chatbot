@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 interface IUser {
-  _id: any;
+  _id: string;
   email: string;
   name?: string;
 }
@@ -16,21 +16,11 @@ interface AuthContextType {
   refreshSession: () => Promise<void>;
 }
 
-interface AppInfo {
-  userId: { type: any, ref: 'User' },
-  qna: [{
-    question: { type: String, required: true },
-    answer: { type: String, required: true },
-    timeStamp: { type: Date }
-  }]
-}
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
   const [userInfo, setUser] = useState<IUser | null>(null);
-  const [appInfo, setAppInfo] = useState<IUser | null>(null);
 
   const checkSession = async () => {
     if (signedIn) return;
@@ -38,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch('/api/auth-session');
       if (res.ok) {
-        const data = await res.json();
+        const data: IUser = await res.json();
         setSignedIn(true);
         setUser(data);
       } else {
@@ -52,12 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // In your AuthContext.tsx
   const refreshSession = async () => {
     try {
       const res = await fetch('/api/auth-session');
       if (res.ok) {
-        const data = await res.json();
+        const data: IUser = await res.json();
         setSignedIn(true);
         setUser(data);
       } else {
@@ -73,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     checkSession();
-  }, []);
+  }, [checkSession]);
 
   return (
     <AuthContext.Provider value={{ signedIn, userInfo, setSignedIn, setUser, checkSession, refreshSession }}>
