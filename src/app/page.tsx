@@ -168,7 +168,7 @@ export default function Home() {
               {message.answer && (
                 <div className="flex justify-start">
                   <div className="bg-gray-200 text-black rounded-lg px-4 py-2 max-w-lg lg:max-w-xl break-words">
-                    <p className="break-words whitespace-pre-wrap overflow-wrap-anywhere">{message.answer}</p>
+                    <p className="break-words whitespace-pre-wrap overflow-wrap-anywhere">{JSON.parse(message.answer).response || message.answer}</p>
                     <span className="text-xs opacity-75">
                       {new Date(message.timeStamp).toLocaleTimeString()}
                     </span>
